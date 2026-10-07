@@ -1,0 +1,121 @@
+package mx.tec.avisos.ui.state
+
+import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import mx.tec.avisos.data.AvisosRepository
+import mx.tec.avisos.data.ImagenesRepository
+import mx.tec.avisos.data.imagenes.FotosTemporales
+import mx.tec.avisos.data.imagenes.ImagenIlegible
+import mx.tec.avisos.domain.AvisoValidator
+import retrofit2.HttpException
+import java.io.IOException
+import javax.inject.Inject
+
+/**
+ * `etapa` es lo que se está haciendo, o null si no se está haciendo nada.
+ * Con imagen, publicar es dos peticiones, y el usuario merece saber en cuál va.
+ */
+data class PublicarUiState(
+    val titulo: String = "",
+    val cuerpo: String = "",
+    val imagen: Uri? = null,
+    val etapa: String? = null,
+    val error: String? = null
+) {
+    val enviando: Boolean = etapa != null
+
+    val puedePublicar: Boolean = AvisoValidator.esValido(titulo, cuerpo) && !enviando
+
+    val caracteresRestantes: Int = AvisoValidator.CUERPO_MAX - cuerpo.trim().length
+}
+
+/**
+ * `SavedStateHandle` lo pone Hilt, sin pedirlo en ningún módulo. Lo que se
+ * guarda ahí sobrevive a que Android mate el proceso mientras el usuario está
+ * en la cámara, y vuelve cuando el sistema recrea la pantalla.
+ */
+@HiltViewModel
+class PublicarViewModel @Inject constructor(
+    private val avisos: AvisosRepository,
+    private val imagenes: ImagenesRepository,
+    private val fotos: FotosTemporales,
+    private val guardado: SavedStateHandle
+) : ViewModel() {
+
+    var uiState by mutableStateOf(
+        PublicarUiState(
+            titulo = guardado[TITULO] ?: "",
+            cuerpo = guardado[CUERPO] ?: "",
+            imagen = guardado[IMAGEN]
+        )
+    )
+        private set
+
+    /** Todo cambio de lo que el usuario escribió o eligió pasa por aquí, y queda guardado. */
+    private fun editar(nuevo: PublicarUiState) {
+        uiState = nuevo
+        guardado[TITULO] = nuevo.titulo
+        guardado[CUERPO] = nuevo.cuerpo
+        guardado[IMAGEN] = nuevo.imagen
+    }
+
+    fun onTituloChange(texto: String) {
+        if (texto.length <= AvisoValidator.TITULO_MAX) editar(uiState.copy(titulo = texto, error = null))
+    }
+
+    fun onCuerpoChange(texto: String) {
+        if (texto.length <= AvisoValidator.CUERPO_MAX) editar(uiState.copy(cuerpo = texto, error = null))
+    }
+
+    fun onImagenElegida(uri: Uri) {
+        editar(uiState.copy(imagen = uri, error = null))
+    }
+
+    fun quitarImagen() {
+        editar(uiState.copy(imagen = null, error = null))
+    }
+
+    /** Dónde va a escribir la cámara. Lo crea quien sabe de archivos, no la pantalla. */
+    fun nuevaFoto(): Uri = fotos.nueva()
+
+    /** `alTerminar` se llama solo si el servidor aceptó el aviso. Un error se queda a la vista. */
+    fun publicar(alTerminar: () -> Unit) {
+        if (!uiState.puedePublicar) return
+        viewModelScope.launch {
+            val imagen = uiState.imagen
+            try {
+                // Primero la imagen: si falla, no queda un aviso publicado sin ella.
+                val clave = if (imagen != null) {
+                    uiState = uiState.copy(etapa = "Subiendo la imagen…", error = null)
+                    imagenes.subir(imagen)
+                } else {
+                    null
+                }
+                uiState = uiState.copy(etapa = "Publicando…", error = null)
+                avisos.publicar(uiState.titulo, uiState.cuerpo, clave)
+                fotos.limpiar()
+                uiState = uiState.copy(etapa = null)
+                alTerminar()
+            } catch (e: ImagenIlegible) {
+                uiState = uiState.copy(etapa = null, error = "No se pudo leer esa imagen. Elige otra.")
+            } catch (e: IOException) {
+                uiState = uiState.copy(etapa = null, error = "No hay conexión. El aviso no se publicó.")
+            } catch (e: HttpException) {
+                uiState = uiState.copy(etapa = null, error = mensajeDe(e))
+            }
+        }
+    }
+
+    private companion object {
+        const val TITULO = "titulo"
+        const val CUERPO = "cuerpo"
+        const val IMAGEN = "imagen"
+    }
+}

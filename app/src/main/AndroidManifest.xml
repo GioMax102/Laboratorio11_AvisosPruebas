@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Desde Android 13 mostrar notificaciones es un permiso que el usuario concede en tiempo de ejecución. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--
+      allowBackup="false": la sesión no debe viajar en un respaldo. Un respaldo
+      se restaura en OTRO teléfono, con OTRO Keystore, y ahí el token cifrado es
+      basura — y un token en claro sería una sesión regalada.
+    -->
+    <application
+        android:name=".AvisosApplication"
+        android:allowBackup="false"
+        android:label="Avisos"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Avisos">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="Avisos">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+          Le presta a la cámara un archivo de esta app para que escriba la foto.
+          La autoridad es el nombre con que se piden las direcciones (FotosTemporales);
+          exported="false" + grantUriPermissions: nadie entra, salvo a quien se le preste.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fotos"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/rutas_de_fotos" />
+        </provider>
+
+        <!--
+          WorkManager se arranca solo con su configuración por omisión, que no sabe
+          inyectar dependencias en los workers. Se apaga ese arranque y la
+          configuración la da AvisosApplication, con la fábrica de Hilt.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+    </application>
+</manifest>

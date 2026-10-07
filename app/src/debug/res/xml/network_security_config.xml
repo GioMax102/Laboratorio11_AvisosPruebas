@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Solo existe en src/debug: el APK de release no lo lleva y sigue exigiendo HTTPS.
+  10.0.2.2 es tu computadora vista desde el emulador, donde corre tu servidor de
+  Docker con HTTP en claro. Nada más queda permitido: el túnel ya es HTTPS.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>
