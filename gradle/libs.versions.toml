@@ -1,5 +1,5 @@
 [versions]
-agp = "9.3.1"
+agp = "9.4.1"
 kotlin = "2.4.10"
 ksp = "2.3.12"
 hilt = "2.60.1"
@@ -16,6 +16,7 @@ okhttp = "4.12.0"
 serializationJson = "1.11.0"
 datastore = "1.2.1"
 work = "2.11.2"
+junit = "4.13.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,6 +47,7 @@ androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", vers
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

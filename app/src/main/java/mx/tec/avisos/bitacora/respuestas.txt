@@ -1,0 +1,6 @@
+
+Ejercicio 0
+Para cada promesa de la tabla, decidan si su prueba puede correr en la JVM o necesita el emulador.
+Las dos primeras son Kotlin puro (AvisoValidator, tiempoRelativo): locales. Las del ViewModel tocan el compresor y las fotos temporales, que piden un Context y una Uri de Android: instrumentadas. Y la de TalkBack necesita dibujar la pantalla: instrumentada.
+
+

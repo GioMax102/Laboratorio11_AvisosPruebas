@@ -66,7 +66,8 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.okhttp.sse)
-    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.work.runtime)    // Pruebas locales (src/test): corren en la JVM de tu computadora, sin emulador.
+    testImplementation(libs.junit)
 
     // Hilt (Práctica 9): la librería, el generador de código, y sus piezas para ViewModel y WorkManager
     implementation(libs.hilt.android)
