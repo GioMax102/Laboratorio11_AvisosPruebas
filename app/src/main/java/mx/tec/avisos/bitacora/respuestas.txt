@@ -3,4 +3,6 @@ Ejercicio 0
 Para cada promesa de la tabla, decidan si su prueba puede correr en la JVM o necesita el emulador.
 Las dos primeras son Kotlin puro (AvisoValidator, tiempoRelativo): locales. Las del ViewModel tocan el compresor y las fotos temporales, que piden un Context y una Uri de Android: instrumentadas. Y la de TalkBack necesita dibujar la pantalla: instrumentada.
 
-
+Todas las imágenes del tablón se anuncian igual: «Imagen del aviso». La prueba pasa. ¿Es suficiente para quien usa TalkBack? ¿Qué descripción sería mejor, y cómo lo probarías?
+No es suficiente, al sonar todas idénticas, el usuario no tiene contexto sobre de què trata cada aviso específico.
+Se podría activar el TalkBack del dispositivo físico y navegar por los elementos para asegurar que tengan sentido en contexto.
